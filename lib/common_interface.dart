@@ -23,18 +23,20 @@ class _CommonLoginPageState extends State<CommonLoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    Color violet = const Color(0xFF7E57C2);
+    const Color primaryPurple = Color(0xFF7C4DFF);
+    const Color bgBlack = Colors.black;
+    const Color whiteText = Colors.white;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgBlack,
       appBar: AppBar(
+        backgroundColor: primaryPurple,
+        elevation: 0,
+        centerTitle: true,
         title: const Text(
           'Canteen Login',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: whiteText, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: violet,
-        centerTitle: true,
-        elevation: 4,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -46,7 +48,7 @@ class _CommonLoginPageState extends State<CommonLoginPage> {
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: violet,
+                color: primaryPurple,
               ),
             ),
             const SizedBox(height: 20),
@@ -66,7 +68,7 @@ class _CommonLoginPageState extends State<CommonLoginPage> {
                       resetForm();
                     });
                   },
-                  color: violet,
+                  color: primaryPurple,
                 ),
                 _buildRoleCard(
                   title: 'Admin',
@@ -79,65 +81,91 @@ class _CommonLoginPageState extends State<CommonLoginPage> {
                       resetForm();
                     });
                   },
-                  color: violet,
+                  color: primaryPurple,
                 ),
               ],
             ),
             const SizedBox(height: 30),
 
-            // Login Form
             if (isStudentSelected || isAdminSelected)
               Form(
                 key: _formKey,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
                       isStudentSelected ? 'Student Login' : 'Admin Login',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: whiteText,
                       ),
-                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
 
                     // ID Field
-                    TextFormField(
-                      controller: idController,
-                      keyboardType: TextInputType.number,
-                      maxLength: 12,
-                      decoration: _buildInputDecoration(
-                        label: isStudentSelected ? 'Student Roll No' : 'Admin ID',
-                        icon: Icons.person,
-                        color: violet,
+                    if (isStudentSelected)
+                      TextFormField(
+                        controller: idController,
+                        keyboardType: TextInputType.text,
+                        maxLength: 7,
+                        style: const TextStyle(color: whiteText),
+                        decoration: _buildInputDecoration(
+                          label: 'Student Roll No',
+                          icon: Icons.person,
+                          color: primaryPurple,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return "Please enter Roll No";
+                          }
+                          final pattern = RegExp(r'^22CSEC\d{2}$', caseSensitive: false);
+                          if (!pattern.hasMatch(value)) {
+                            return "Enter a valid Student ID (e.g., 22CSEC01)";
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Please enter ${isStudentSelected ? 'Roll No' : 'Admin ID'}";
-                        } else if (value.length != 12) {
-                          return "${isStudentSelected ? 'Roll No' : 'Admin ID'} must be 12 digits";
-                        }
-                        return null;
-                      },
-                    ),
+
+                    if (isAdminSelected)
+                      TextFormField(
+                        controller: idController,
+                        keyboardType: TextInputType.text,
+                        maxLength: 10,
+                        style: const TextStyle(color: whiteText),
+                        decoration: _buildInputDecoration(
+                          label: 'Admin ID',
+                          icon: Icons.person,
+                          color: primaryPurple,
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return "Please enter Admin ID";
+                          }
+                          //final pattern = RegExp(r'^Admin@[A-Z][a-zA-Z0-9]{3}$');
+                          // if (!pattern.hasMatch(value)) {
+                          //   return "Admin ID must be like 'Admin@Xyz1'";
+                          // }
+                          return null;
+                        },
+                      ),
+
                     const SizedBox(height: 15),
 
                     // Password Field
                     TextFormField(
                       controller: passwordController,
                       obscureText: textVisible,
-                      maxLength: 12,
-                      keyboardType: TextInputType.number,
+                      keyboardType: TextInputType.text,
+                      maxLength: isStudentSelected ? 11 : 4,
+                      style: const TextStyle(color: whiteText),
                       decoration: _buildInputDecoration(
                         label: "Password",
                         icon: Icons.lock,
-                        color: violet,
+                        color: primaryPurple,
                         suffix: IconButton(
                           icon: Icon(
                             textVisible ? Icons.visibility_off : Icons.visibility,
-                            color: Colors.grey,
+                            color: Colors.grey.shade300,
                           ),
                           onPressed: () {
                             setState(() {
@@ -149,15 +177,17 @@ class _CommonLoginPageState extends State<CommonLoginPage> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return "Please enter Password";
-                        } else if (value.length != 12) {
-                          return "Password must be 12 digits";
+                        }
+                        if (isStudentSelected && value.length != 11) {
+                          return "Password must be 11 digits";
+                        } else if (isAdminSelected && value.length != 4) {
+                          return "Password must be 4 characters";
                         }
                         return null;
                       },
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 25),
 
-                    // Login Button
                     ElevatedButton(
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
@@ -166,18 +196,19 @@ class _CommonLoginPageState extends State<CommonLoginPage> {
                               content: Text(
                                 '${isStudentSelected ? 'Student' : 'Admin'} Login Successful!',
                               ),
-                              backgroundColor: violet,
+                              backgroundColor: primaryPurple,
                             ),
                           );
-                          // TODO: Navigate to dashboard
+                          // TODO: Navigate to admin or student dashboard
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: violet,
+                        backgroundColor: primaryPurple,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 32),
                       ),
                       child: const Text(
                         'Login',
@@ -193,7 +224,6 @@ class _CommonLoginPageState extends State<CommonLoginPage> {
     );
   }
 
-  // Widget: Role Card
   Widget _buildRoleCard({
     required String title,
     required IconData icon,
@@ -208,28 +238,27 @@ class _CommonLoginPageState extends State<CommonLoginPage> {
         width: 130,
         height: 130,
         decoration: BoxDecoration(
-          color: selected ? color : Colors.grey[200],
+          color: selected ? color : Colors.grey.shade900,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: selected
-              ? [
+          border: Border.all(color: selected ? color : Colors.grey.shade600),
+          boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.4),
+              color: selected ? color.withOpacity(0.3) : Colors.black26,
               blurRadius: 10,
               offset: const Offset(0, 6),
-            ),
-          ]
-              : [],
+            )
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 40, color: selected ? Colors.white : Colors.black87),
+            Icon(icon, size: 40, color: Colors.white),
             const SizedBox(height: 8),
             Text(
               title,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 18,
-                color: selected ? Colors.white : Colors.black87,
+                color: Colors.white,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -239,7 +268,6 @@ class _CommonLoginPageState extends State<CommonLoginPage> {
     );
   }
 
-  // Widget: Input Decoration
   InputDecoration _buildInputDecoration({
     required String label,
     required IconData icon,
@@ -248,9 +276,13 @@ class _CommonLoginPageState extends State<CommonLoginPage> {
   }) {
     return InputDecoration(
       labelText: label,
+      labelStyle: const TextStyle(color: Colors.white),
       prefixIcon: Icon(icon, color: color),
       suffixIcon: suffix,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      enabledBorder: OutlineInputBorder(
+        borderSide: const BorderSide(color: Colors.white24),
+        borderRadius: BorderRadius.circular(12),
+      ),
       focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(color: color, width: 2),
         borderRadius: BorderRadius.circular(12),
